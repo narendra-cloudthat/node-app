@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-js-svc
+  labels:
+    app: node-app
+spec:
+  ports:
+  - port: 3000
+    name: web
+  type: NodePort
+  selector:
+    app: node-app
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: node-js-sts
+spec:
+  serviceName: "node-js-svc"
+  replicas: 2
+  selector:
+    matchLabels:
+      app: node-app
+  template:
+    metadata:
+      labels:
+        app: node-app
+    spec:
+      imagePullSecrets:
+      - name: regcred
+      containers:
+      - name: node-js
+        image: narendr1996/node-js:v1
+        ports:
+        - containerPort: 3000
+          name: web
+        volumeMounts:
+        - name: www
+          mountPath: /usr/share/nginx/html
+  volumeClaimTemplates:
+  - metadata:
+      name: www
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
